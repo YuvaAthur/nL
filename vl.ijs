@@ -2,13 +2,13 @@ NB. Created Jul 19 2016
 
 NB. =========================================================
 NB. History: 
-NB. 	* Jul 12 2016 : First Implementation
+NB. 	* Jul 19 2016 : First Implementation
 NB. ---------------------------------------------------------
 
 NB. =========================================================
 NB. Implementation of numerical algorithm to find Voronoi 
 NB. Languages
-NB. REf: 
+NB. Ref: http://www.sfs.uni-tuebingen.de/~gjaeger/cgi/publications.shtml
 NB. ---------------------------------------------------------
 
 N=:3		NB.number of words
@@ -53,16 +53,23 @@ wdist =: verb define
 )
 
 NB. ------- One Iteration : Begin ------
-tbI =. wdist w
+tbI =: wdist w
 
 NB. this part of code is not required since I use join directly
-NB. votes =: (i. N) ([: +/"1 =/) (; _1{."1 tbI) NB. which words are close to terms
-NB. votesI =: I.@:(0&<) votes		NB. to find which words are relevant
-
-wt =: |: (<"0 i.N) ,: wb =: <"1 w     NB. table of index of w
-wo =: wt (0;1;1;0)join tbI		NB. find all the terms that map to a word
+votes =: (i. N) ([: +/"1 =/) (; _1{."1 tbI) NB. which words are close to terms
+votesI =: I.@:(0&<) votes		NB. to find which words are relevant
+wb =: <"1 w 
+wt =: |: (<"0 i.N) , (<"0 votes),: wb     NB. table of index of w + votes
+wo =: wt (0;1;0 1 2;0)join tbI	NB. find all the terms that map to a word
 
 NB. TODO: Now do the lambda transformation to get new words
+g =: ({."1 wo) </. ({:"1 wo)   	NB. Use first column as keys; collect last-column values
+gsum =: (+/@:>) L:1 g	  	NB. sum up the coordinates
+nw =: ((votesI{ lambda*(>wb)) + ((1-lambda)* (>gsum)))%(votesI { votes)
+comp_nw_ow_1 =: (<"0 votesI) ,. (<"1 nw) ,. (<"1 votesI { w) NB. compare new with old!
+owI =: (i.N) -. votesI
+comp_nw_ow_0 =:  (<"0 owI) ,. (<"1 owI { w) ,. (<"1 owI { w) NB. list of old
+comp_nw_ow =: comp_nw_ow_0 , comp_nw_ow_1
 
 NB. ------- One Iteration : End ------
 
