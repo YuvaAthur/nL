@@ -11,8 +11,8 @@ NB. Languages
 NB. Ref: http://www.sfs.uni-tuebingen.de/~gjaeger/cgi/publications.shtml
 NB. ---------------------------------------------------------
 
-N=:3		NB.number of words
-T=:5		NB.total sample size -> approx T/N in each tile
+N=:10		NB.number of words
+T=:10		NB.total sample size -> approx T/N in each tile
 
 R=:0		NB. Range for coordinates
 x =: |: ,: N ?@$ R	NB. initial words - x coordinate $x = 1 N
@@ -27,6 +27,7 @@ xold =: N $ 0
 yold =: N $ 0
 
 w=: x,.y		NB. initial words
+t=:|: (2,T) ?@$ R  NB. choose random set of terms
 
 dist=: +/@:*:@:-	NB. (x1-x2)^2 + (y1-y2)^2
 NB. Join functions
@@ -42,8 +43,7 @@ join=: 1 : 0                NB. A (ia;ib;sa;sb) join B
 
 NB. find the words distribution with respect to a random set of terms
 wdist =: verb define
- w =. y
- t=.|: (2,T) ?@$ R  NB. choose random set of terms
+ 'w t' =. y
  wb=. <"1 w	NB. dim N
  tb=: <"1 t	NB. dim T
  p=: tb dist"1 L:0 (|: (#tb) #"0 wb) 	NB. compute distance of all words from terms 
@@ -53,7 +53,7 @@ wdist =: verb define
 )
 
 NB. ------- One Iteration : Begin ------
-tbI =: wdist w
+tbI =: wdist w;t
 
 NB. this part of code is not required since I use join directly
 votes =: (i. N) ([: +/"1 =/) (; _1{."1 tbI) NB. which words are close to terms
@@ -65,14 +65,50 @@ wo =: wt (0;1;0 1 2;0)join tbI	NB. find all the terms that map to a word
 NB. TODO: Now do the lambda transformation to get new words
 g =: ({."1 wo) </. ({:"1 wo)   	NB. Use first column as keys; collect last-column values
 gsum =: (+/@:>) L:1 g	  	NB. sum up the coordinates
-nw =: ((votesI{ lambda*(>wb)) + ((1-lambda)* (>gsum)))%(votesI { votes)
-comp_nw_ow_1 =: (<"0 votesI) ,. (<"1 nw) ,. (<"1 votesI { w) NB. compare new with old!
+wl =: ((votesI{ lambda*(>wb)) + ((1-lambda)* (>gsum)))%(votesI { votes) NB. do lambda transform
+comp_nw_ow_1 =: (<"0 votesI) ,. (<"1 wl) ,. (<"1 votesI { w) NB. compare new with old!
 owI =: (i.N) -. votesI
 comp_nw_ow_0 =:  (<"0 owI) ,. (<"1 owI { w) ,. (<"1 owI { w) NB. list of old
 comp_nw_ow =: comp_nw_ow_0 , comp_nw_ow_1
+nw =: > (1{"1 comp_nw_ow) /: ({."1 comp_nw_ow) NB. sort new words using first column
 
 NB. ------- One Iteration : End ------
 
+NB. use the numerical approx method to determine the new words
+wNew =: verb define
+ 'w t' =. y
+ tbI =. wdist w;t
+ votes =. (i. N) ([: +/"1 =/) (; _1{."1 tbI) NB. which words are close to terms
+ votesI =. I.@:(0&<) votes		NB. to find which words are relevant
+ wb =. <"1 w 
+ wt =. |: (<"0 i.N) , (<"0 votes),: wb     NB. table of index of w + votes
+ wo =. wt (0;1;0 1 2;0)join tbI	NB. find all the terms that map to a word
+
+ NB. Now do the lambda transformation to get new words
+ g =. ({."1 wo) </. ({:"1 wo)   	NB. Use first column as keys; collect last-column values
+ gsum =. (+/@:>) L:1 g	  	NB. sum up the coordinates
+ nw =. ((votesI{ lambda*(>wb)) + ((1-lambda)* (>gsum)))%(votesI { votes)
+ comp_nw_ow_1 =. (<"0 votesI) ,. (<"1 nw) ,. (<"1 votesI { w) NB. compare new with old!
+ owI =: (i.N) -. votesI
+ comp_nw_ow_0 =.  (<"0 owI) ,. (<"1 owI { w) ,. (<"1 owI { w) NB. list of old
+ comp_nw_ow =. comp_nw_ow_0 , comp_nw_ow_1
+ nw =. > (1{"1 comp_nw_ow) /: ({."1 comp_nw_ow) NB. sort new words using first column
+)
+
+NB. 	nw -: (wNew w;t)		NB. test wNew verb
+
+wNewIter =: verb define
+ 'w t' =. y
+  nw =. wNew y
+  t=.|: (2,T) ?@$ R  NB. change random set of terms
+  nw;t
+)
+
+NB. draw the voronoi evolution!
+require (jpath '~Projects'),'/nl/vv.ijs'  
+
+draw_voronoi w
+draw_voronoi nw
 
 NB. =========================================================
 
