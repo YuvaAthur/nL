@@ -2,7 +2,9 @@ NB.simple voronoi
 
 NB. (number of points) voronoi (shape)
 NB. Generates an array of indices of the nearest point
-voronoi =: 4 :0
+NB. 5 vor00 10 10 
+NB. optimized for viewmat
+vor00 =: 4 :0
   p =. (x,2) ?@$ y
   d2 =. +/@:*:@:-"1  	NB. Euclidean
   d1=. +/@:|@:-"1		NB. Manhattan metric
@@ -11,8 +13,12 @@ NB.   (i.<./)@:(+/@:*:@:-"1&p)"1 ,"0/&i./ y
 )
  
 
-load'viewmat'
-NB. viewmat 25 voronoi 500 500
+NB. Test vor00
+NB. load'viewmat'
+NB. viewmat 25 vor00 500 500
+
+vor01 =: verb define
+)
 
 
 NB. ---------------------------------------------------------
@@ -20,13 +26,26 @@ NB. Visualize using gnuplot -- does not yet work
 FPATH=: jpath '~temp\'
 
 gp=: ''&$: : (4 : 0)
- f =. FPATH,'mesh.dat'
+ f =. FPATH,'vizsv.dat'
  y (1!:2 <) f
  gnuplot =: '/usr/local/bin/gnuplot'
  pfcall=: gnuplot, ' --persist -e "unset key ; set terminal qt ; plot ''',f,''' w l"'
  2!:0 pfcall
  EMPTY
 )
+
+gp01=: verb define
+   gpexe =: '/usr/local/bin/gnuplot --persist -e '
+   gpcmd1 =: ' ''plot sin(x)/x'''
+   2!:1 gpexe, gpcmd1
+)
+
+gp02=: verb define
+   gpexe =: '/usr/local/bin/gnuplot --persist -e '
+   gpcmd1 =: ' ''plot ', y, ''''
+   2!:1 gpexe, gpcmd1
+)
+
 NB. gp 25 voronoi 500 500
 NB. ---------------------------------------------------------
 

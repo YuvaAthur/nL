@@ -89,11 +89,27 @@ NB. retain CORNER nodes?
 if. x do. E;N else. y ;~ (#~ 0 (all . <:) |:)@:(-&(#CORNERS)) E end. NB. n-D
 )
  
-gp=: ''&$: : (4 : 0)
-f =. FPATH,'mesh.dat'
-y (1!:2 <) f
-gnuplot =: '/usr/local/bin/gnuplot'
-pfcall=: gnuplot, ' --persist -e "unset key ; set terminal qt ; plot ''',f,''' w l"'
+gp1=: ''&$: : (4 : 0)
+f =: FPATH,'mesh.dat'
+NB. y (1!:2 <) f
+dat fwrite f
+gnuplot =. '/usr/local/bin/gnuplot --persist -e "unset key ; set terminal qt ; '
+pfcall=. gnuplot, '  plot ''',f,'''  w l "'
+2!:0 pfcall
+EMPTY
+)
+
+
+gp2=: ''&$: : (4 : 0)
+f =: FPATH,'mesh.dat'
+g =: FPATH,'point.dat'
+NB. y (1!:2 <) f
+'pt data' =: y
+pt fwrite g
+data fwrite f
+gnuplot =. '/usr/local/bin/gnuplot --persist -e "unset key ; set terminal qt ; '
+NB. pfcall=: gnuplot, ' plot ''',g,''' with points pt 7 ps 10 ;  plot ''',f,''' with lines"'
+pfcall=: gnuplot, '  plot ''',f,''' with lines , ''',g,''' with points pt 7 "' NB.ps 2 "'
 2!:0 pfcall
 EMPTY
 )
@@ -134,7 +150,7 @@ a2=. +:@:det&.> t
 Sx=. squares det@:((<0 1 2;0)})"1 2&.> t
 Sy=. squares det@:((<0 1 2;1)})"1 2&.> t
 centers=. a2 %&.>~ Sx ,.&.> Sy
-convex_hull&.>centers
+v =. convex_hull&.>centers
 )
  
 NB. swap=: <@:[ C. ]                    NB. swap=: (C.~ <)~
@@ -172,42 +188,54 @@ M {. y
 )
  
 test_convex_hull=: gp@:string_polygon@:convex_hull NB. test_convex_hull nodes
- 
-string_polygon=: ruin_negative@:,@:(,.&LF)@:":@:(, {.)  NB. y are nodes
+
+string_list =: (,.&LF)@:": NB. adds a LF to string values 
+string_list2=: (,.&LF)@:(,.&LF)@:": NB. adds a LF to string values 
+NB. string_polygon=: ruin_negative@:,@:(,.&LF)@:":@:(, {.)  NB. y are nodes
+string_polygon=: ruin_negative@:,@:string_list@:(, {.)  NB. y are nodes
 string_voronoi=: string_polygon@:(string_polygon@>)  NB. y are the boxes of nodes
+
+
  
 draw_voronoi=: gp@:string_voronoi@:voronoi
+draw_voronoi2 =: verb define
+ p =. y
+ v =. voronoi p
+ dat =: (string_list2 p);(string_voronoi v)
+ gp2 dat 
+)
+
 demo_voronoi=: [: draw_voronoi ?.random_points
 
 NB. Example points:
-NB.
-NB. points=: ".;._2]0 :0
-NB. 454 392
-NB. 251 702
-NB. 621 668
-NB. 633 453
-NB. 423 616
-NB. 224 518
-NB. 419 803
-NB. 552 535
-NB. 356 436
-NB. 400 184
-NB. 688 233
-NB. 724 491
-NB. 724 777
-NB. 128 755
-NB.  78 453
-NB. 153 211
-NB.  85  57
-NB. 497 129
-NB. 765  70
-NB. 793 458
-NB. 779 824
-NB.  65 810
-NB. 146 592
-NB.  17 192
-NB. 197 392
-NB. )
-NB.
+
+points=: ".;._2]0 :0
+454 392
+251 702
+621 668
+633 453
+423 616
+224 518
+419 803
+552 535
+356 436
+400 184
+688 233
+724 491
+724 777
+128 755
+ 78 453
+153 211
+ 85  57
+497 129
+765  70
+793 458
+779 824
+ 65 810
+146 592
+ 17 192
+197 392
+)
+
 NB. plot_tria_mesh mesh=: triangulate points
-NB. draw_voronoi points
+draw_voronoi2 points
